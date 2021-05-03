@@ -6,8 +6,8 @@ model = init_dynamics();
 t = 0;
 
 % System states, quaternions from inertial frame of reference to body; 
-% quaternions from body to tail
-x = [1; zeros(3, 1); 1; zeros(3, 1); zeros(6, 1)];
+% quaternions from body to tail; body center of mass position
+x = [1; zeros(3, 1); 1; zeros(3, 1); zeros(3, 1); zeros(9, 1)];
 
 % Input of tail's motor roll and pitch
 u = [0; 1];
