@@ -4,13 +4,13 @@ clear; clc; close all
 model = init_dynamics();
 
 t = 0;
-
+test=load('test');
 % System states, quaternions from inertial frame of reference to body; 
 % quaternions from body to tail
 x = [1; zeros(3, 1); 1; zeros(3, 1); zeros(6, 1)];
 
 % Input of tail's motor roll and pitch
-u = [1; 0];
+u = [5; -1];
 
 % Continuous dynamics
 x_dot = dynamics(model, x, u);
@@ -19,7 +19,7 @@ x_dot = dynamics(model, x, u);
 [A, B] = dynamics_jacobian(model, x, u);
 
 % Discrete dynamics with explicit RK4
-xk1 = discrete_dynamics(model, x, u, 1e-3);
+xk1 = discrete_dynamics(model, x, u, 0.02);
 
 % Discrete dynamics Jacobian with explicit RK4
 [Ak, Bk] = discrete_dynamics_jacobian(model, x, u, 1e-3);
