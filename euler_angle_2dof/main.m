@@ -8,7 +8,8 @@ t = 0;
 % System states, Euler angles from inertial frame of reference to body,
 % roll, pitch, and yaw; Euler angles from body to tail, roll and pitch, we
 % don't use yaw here to keep consistency to the 2 motors
-x = zeros(11, 1);
+%x = zeros(11, 1);
+x = pi*rand(11,1)-pi/2;
 
 % Input in generalized coordinates, body should be zeros and tail's motor
 % input should be same as roll and pitch

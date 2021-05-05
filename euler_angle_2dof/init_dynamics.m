@@ -1,7 +1,9 @@
 function [model] = init_dynamics()
 
-addpath('..\utils\')
-addpath('..\utils\casadi\')
+% addpath('..\utils\')
+% addpath('..\utils\casadi\')
+addpath('utils')
+addpath('utils\casadi')
 import casadi.*
 
 % Body mass
