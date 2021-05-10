@@ -22,7 +22,7 @@ x_dot = dynamics(model, x, u);
 xk1 = discrete_dynamics(model, x, u, 0.02);
 
 % Discrete dynamics Jacobian with explicit RK4
-[Ak, Bk] = discrete_dynamics_jacobian(model, x, u, 1e-3);
+[Ak, Bk, Tk] = discrete_dynamics_jacobian(model, x, u, 1e-3);
 
 % Simulation with Matlab ODE45
 [ts, xs] = ode45(@(t, x) dynamics(model, x, u), [0, 1], x);
@@ -49,10 +49,11 @@ xk1 = full(tmp.xk1);
 
 end
 
-function [Ak, Bk] = discrete_dynamics_jacobian(model, x, u, dt)
+function [Ak, Bk, Tk] = discrete_dynamics_jacobian(model, x, u, dt)
 
 tmp = model.discrete_dynamics_jacobian('x', x, 'u', u, 'dt', dt);
 Ak = full(tmp.Ak);
 Bk = full(tmp.Bk);
+Tk = full(tmp.Tk);
 
 end

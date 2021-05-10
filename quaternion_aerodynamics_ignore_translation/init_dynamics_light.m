@@ -226,8 +226,9 @@ discrete_dynamics_func = Function('discrete_dynamics_func',{xk, uk, dt},{xk1},{'
 % Discrete dynamics jacobian
 Ak = jacobian(xk1, xk);
 Bk = jacobian(xk1, uk);
+Tk = jacobian(xk1, dt);
 
-discrete_dynamics_jacobian_func = Function('discrete_dynamics_jacobian_func',{xk, uk, dt},{Ak, Bk},{'x','u','dt'},{'Ak', 'Bk'});
+discrete_dynamics_jacobian_func = Function('discrete_dynamics_jacobian_func',{xk, uk, dt},{Ak, Bk, Tk},{'x','u','dt'},{'Ak', 'Bk', 'Tk'});
 
 %% Output
 
