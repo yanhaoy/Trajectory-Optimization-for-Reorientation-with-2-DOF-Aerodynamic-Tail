@@ -10,13 +10,13 @@ import casadi.*
 m_b = 1;
 
 % Tail mass
-m_t = 0.1;
+m_t = 0.25;
 
 % Body inertia
 J_b = [1; 1; 1];
 
 % Tail inertia
-J_t = [0.1;0.1;0.1];
+J_t = [0.25;0.25;0.25];
 
 % Translation from body to joint in body frame
 l_b = [1; 0; 0];
