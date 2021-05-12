@@ -1,4 +1,4 @@
-function plot_states_comparison(Z_1,Z_2,Z_3,x_ind,u_ind,t_ind,vals)
+function plot_states_comparison(Z_1,Z_2,Z_3,x_ind,u_ind,t_ind,x2_ind,u2_ind,t2_ind,vals)
 
 n = vals.n; m = vals.m; N = vals.N;
 
@@ -17,16 +17,17 @@ for i = 1:N
         
         if j == 1
             Z = Z_1;
+            x = Z(x_ind{i});
         elseif j == 2
             Z = Z_2;
+            x = Z(x2_ind{i});
         else
             Z = Z_3;
+            x = Z(x2_ind{i});
         end
-        
-        x = Z(x_ind{i});
 
-        eul_b = quat2eul(x(1:4)');
-        eul_t = quat2eul(x(5:8)');
+        eul_b = quat2eul(x(1:4)','XYZ');
+        eul_t = quat2eul(x(5:8)','XYZ');
 
         rb_vec(i,j) = eul_b(1);
         pb_vec(i,j) = eul_b(2);
@@ -35,12 +36,22 @@ for i = 1:N
         pt_vec(i,j) = eul_t(2);
         
         if i < N
-            u = Z(u_ind{i});
+            if j == 1
+                Z = Z_1;
+                u = Z(u_ind{i});
+                t = Z(t_ind{i});
+            elseif j == 2
+                Z = Z_2;
+                u = Z(u2_ind{i});
+                t = Z(t2_ind{i});
+            else
+                Z = Z_3;
+                u = Z(u2_ind{i});
+                t = Z(t2_ind{i});
+            end
 
             u1_vec(i,j) = u(1);
             u2_vec(i,j) = u(2);
-            
-            t = Z(t_ind{i});
 
             t_vec(i+1,j) = t_vec(i,j) + t;
         end
@@ -70,7 +81,7 @@ hold on
 plot(t_vec(:,1),y_vec(:,1),'b');
 plot(t_vec(:,2),y_vec(:,2),'c');
 plot(t_vec(:,3),y_vec(:,3),'r');
-title('body/tail yaw')
+title('body yaw')
 
 subplot(2,4,4)
 hold on
