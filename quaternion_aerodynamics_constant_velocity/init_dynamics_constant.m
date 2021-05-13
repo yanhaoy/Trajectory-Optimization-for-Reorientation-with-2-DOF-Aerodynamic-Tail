@@ -1,36 +1,28 @@
-function [model] = init_dynamics()
+function [model] = init_dynamics_constant()
 
-% addpath('..\utils\')
-% addpath('..\utils\casadi\')
-addpath('utils')
-addpath('utils\casadi')
+addpath('utils\')
+addpath('utils\casadi\')
 import casadi.*
 
 % Body mass
 m_b = 1;
 
 % Tail mass, since we are using aerodyanmics, we could have a lighter tail
-% m_t = 0.25;
-m_t = 0.02;
+m_t = 0.05;
 
 % Body inertia
 J_b = [1; 1; 1];
 
 % Tail inertia, since we are using aerodyanmics, we could have a lighter
 % tail
-% J_t = [0.25; 0.25; 0.25];
-J_t = [0.02;0.02;0.02];
+J_t = [0.05; 0.05; 0.05];
 
 % Translation from body to joint in body frame
 l_b = [1; 0; 0];
 
-% Tail length, since we are using aerodyanmics, we could have a longer tail
+% Tail length
 tail_l = 1;
-
-% Just a trick to get the relationship between aerodynamics magnitude and
-% length for the integration
-length = SX.sym('length');
-l_t = [- length; 0; 0];
+l_t = [- tail_l; 0; 0];
 
 % Air density
 rho = 1.29;
@@ -45,12 +37,15 @@ shaft_w = 1;
 % Length from joint to tail shaft
 shaft_l = 0;
 
+% Constant translation velocity
+v_ad = [-5; 0; 0];
+
 % Generalized coordinates: quaternions from inertial frame of reference to
 % body; quaternions from body to tail
-q = SX.sym('q', [8, 1]);
+q = SX.sym('q', [11, 1]);
 
 % Quaternions change rates
-q_dot = SX.sym('q_dot', [8, 1]);
+q_dot = SX.sym('q_dot', [11, 1]);
 
 %% Rotation matrices
 
@@ -86,42 +81,60 @@ p_Ot__s = tmp(4:6, :);
 p_dot_Ob__s = jtimes(p_Ob__s, q, q_dot);
 p_dot_Ot__s = jtimes(p_Ot__s, q, q_dot);
 
+% Mass position w.r.t. world
+p_wb__s = tmp(1:3, :) + q(9:11);
+p_wt__s = tmp(4:6, :) + q(9:11);
+
+% Mass translation velocity w.r.t. world
+p_dot_wb__s = jtimes(p_wb__s, q, q_dot);
+p_dot_wt__s = jtimes(p_wt__s, q, q_dot);
+
 %% Aerodynamics
 
 % Here we ignore the translational effect like the Aerodynamics tail paper, 
 % because the direction of the external force here keeps changing, and the 
 % integrated speed should tend to zero.
 
-% We know the translation velocity is a linear function of the length
-k_a = jacobian(p_dot_Ot__s, length);
-k_b = p_dot_Ot__s - k_a*length;
+% Constant translation velocity projected to the normal direction of tail
+v_ad_proj = R_Ot'*v_ad - dot(R_Ot'*v_ad, l_t)*l_t/(l_t'*l_t);
 
-% This is the integration result along the shaft
-magnitude = rho*C_D*shaft_w/2* ...
-    (k_a'*k_a*(tail_l^4 - shaft_l^4)/4 + ...
-    2*k_a'*k_b*(tail_l^3 - shaft_l^3)/3 + ...
-    k_b'*k_b*(tail_l^2 - shaft_l^2)/2);
+% Aerodynamic force should be opposite to the velocity
+f_ad_direction = -v_ad_proj/sqrt(v_ad_proj'*v_ad_proj + 1e-12);
 
-% Maybe there's a better way to compute both magnitude and direction
-% simultaneously, but currently I have it seperate. Here I have to add a
-% small constant to avoid numerical issues
-direction = cross(l_t/sqrt(l_t'*l_t + 1e-12), ...
-    R_Ot'*p_dot_Ot__s/sqrt(p_dot_Ot__s'*p_dot_Ot__s + 1e-12));
+% Aerodynamic force should be quadratic to the velocity
+f_ad_magnitude = rho*C_D*shaft_w/2*(v_ad_proj'*v_ad_proj);
+
+% Aerodynamic force in tail frame
+f_ad = f_ad_direction*f_ad_magnitude;
+
+% Aerodynamic force in inertial frame of reference
+f_ad_O = R_Ot*f_ad;
+
+% Aerodynamic torque is along the cross product of tail and the force
+u_ad_direction = cross(-l_t, -v_ad_proj);
+u_ad_direction = u_ad_direction/sqrt(u_ad_direction'*u_ad_direction + 1e-12);
+
+% Aerodynamic torque is the integral on the sail along the tail length
+u_ad_magnitude = rho*C_D*shaft_w/2*(v_ad_proj'*v_ad_proj)* ...
+    (tail_l^2 - shaft_l^2)/2;
+
+% Aerodynamic torque in tail frame
+u_ad = u_ad_direction*u_ad_magnitude;
 
 % Resulted aerodynamic torque in tail quaternion coordinates
-u_ad_t = 2*quat2L(q(5:8))'*direction*magnitude;
+u_ad_t = 2*quat2L(q(5:8))'*u_ad;
 
 % Resulted aerodynamic torque in body quaternion coordinates
-u_ad_b = 2*quat2L(q(1:4))'*R_bt*direction*magnitude;
+u_ad_b = 2*quat2L(q(1:4))'*R_bt*u_ad;
 
 %% Lagrangian
 
 % Body twist
-V_Ob__b = [R_Ob'*p_dot_Ob__s; w_Ob__b];
+V_Ob__b = [R_Ob'*p_dot_wb__s; w_Ob__b];
 
 % Tail twist, we need to add the body angular velocity here to get the full
 % kinematics cause tail's rotation is on the body
-V_Ot__b = [R_Ot'*p_dot_Ot__s; R_bt' * w_Ob__b + w_bt__b];
+V_Ot__b = [R_Ot'*p_dot_wt__s; R_bt' * w_Ob__b + w_bt__b];
 
 % Mass and inertia
 M_b = diag([m_b * ones(3, 1); J_b]);
@@ -135,7 +148,7 @@ L = T - V;
 %% EOM
 
 % Input in generalized coordinates
-u = SX.sym('u', [8, 1]);
+u = SX.sym('u', [11, 1]);
 
 dLdq_dot = jacobian(L, q_dot);
 dLdq = jacobian(L, q);
@@ -147,24 +160,24 @@ M = jacobian(dLdq_dot, q_dot);
 h = jacobian(dLdq_dot, q)*q_dot - dLdq';
 
 % Constraints Jacobian
-J_c = blkdiag(2*q(1:4)', 2*q(5:8)');
+J_c = [blkdiag(2*q(1:4)', 2*q(5:8)'), zeros(2, 3)];
 h_c = [2*q_dot(1:4)'*q_dot(1:4); 2*q_dot(5:8)'*q_dot(5:8)];
 
 % Generalized coordinates acceleration
-q_ddot = [M, J_c'; J_c, zeros(2, 2)]\([u-h; zeros(2, 1)]-[zeros(8, 1); h_c]+[u_ad_b; u_ad_t; zeros(2, 1)]);
-q_ddot = q_ddot(1:8);
+q_ddot = [M, J_c'; J_c, zeros(2, 2)]\([u-h; zeros(2, 1)]-[zeros(11, 1); h_c]+[u_ad_b; u_ad_t; f_ad_O; zeros(2, 1)]);
+q_ddot = q_ddot(1:11);
 
 % Angular velocity change rate
-w_dot = blkdiag(2*quat2L(q(1:4)), 2*quat2L(q(5:8)))*q_ddot;
+w_dot = blkdiag(2*quat2L(q(1:4)), 2*quat2L(q(5:8)), eye(3))*q_ddot;
 
 % Function handle
-dynamics_func = Function('dynamics_func',{q, q_dot, u, length},{w_dot},{'q','q_dot','u','length'},{'w_dot'});
+dynamics_func = Function('dynamics_func',{q, q_dot, u},{w_dot},{'q','q_dot','u'},{'w_dot'});
 
 %% Coordinates transformation
 
 % Angular velocity of body w.r.t. inertial frame of reference in body frame
 % and tail w.r.t. body frame in tail frame
-w = SX.sym('w', [6, 1]);
+w = SX.sym('w', [9, 1]);
 
 % Input of tail's roll and pitch motor
 u = SX.sym('u', [2, 1]);
@@ -181,9 +194,9 @@ J_u = [cos(pitch), 0;
 J_u = 2*quat2L(q(5:8))'*J_u;
 
 % Map it back to quaternions rates, no singularity here
-q_dot = blkdiag(quat2L(q(1:4))'/2, quat2L(q(5:8))'/2)*w;
+q_dot = blkdiag(quat2L(q(1:4))'/2, quat2L(q(5:8))'/2, eye(3))*w;
 
-w_dot = dynamics_func('q', q, 'q_dot', q_dot, 'u', [zeros(4, 1); J_u*u], 'length', tail_l);
+w_dot = dynamics_func('q', q, 'q_dot', q_dot, 'u', [zeros(4, 1); J_u*u; zeros(3, 1)]);
 w_dot = w_dot.w_dot;
 
 %% Continuous dynamics
@@ -205,7 +218,7 @@ dynamics_jacobian_func = Function('dynamics_jacobian_func',{x, u},{A, B},{'x','u
 %% Discrete dynamics
 
 % Discrete system states
-xk = SX.sym('xk', [14, 1]);
+xk = SX.sym('xk', [20, 1]);
 
 % Discrete system inputs
 uk = SX.sym('uk', [2, 1]);

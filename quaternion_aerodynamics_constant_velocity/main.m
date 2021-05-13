@@ -1,13 +1,13 @@
 clear; clc; close all
 
 % Initialize model
-model = init_dynamics();
+model = init_dynamics_constant();
 
 t = 0;
 
 % System states, quaternions from inertial frame of reference to body; 
-% quaternions from body to tail
-x = [1; zeros(3, 1); 1; zeros(3, 1); zeros(6, 1)];
+% quaternions from body to tail; body center of mass position
+x = [1; zeros(3, 1); 1; zeros(3, 1); zeros(3, 1); zeros(9, 1)];
 
 % Input of tail's motor roll and pitch
 u = [0; 1];
@@ -27,6 +27,15 @@ xk1 = discrete_dynamics(model, x, u, 1e-3);
 % Simulation with Matlab ODE45
 [ts, xs] = ode45(@(t, x) dynamics(model, x, u), [0, 1], x);
 
+% ts = [t];
+% xs = [x];
+% for i=1:1e3
+%     ts(:, end+1) = ts(end) + 1e-3;
+%     xs(:, end+1) = discrete_dynamics(model, xs(:, end), u, 1e-3);
+%     xs(1:4, end) = xs(1:4, end)/norm(xs(1:4, end));
+%     xs(5:8, end) = xs(5:8, end)/norm(xs(5:8, end));
+% end
+    
 function x_dot = dynamics(model, x, u)
 
 tmp = model.dynamics('x', x, 'u', u);
