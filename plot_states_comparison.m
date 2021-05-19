@@ -67,48 +67,62 @@ hold on
 inert = plot(t_vec(:,1),rb_vec(:,1),'b');
 heavy = plot(t_vec(:,2),rb_vec(:,2),'c');
 light = plot(t_vec(:,3),rb_vec(:,3),'r');
-title('body roll')
+ylabel('Angle (rad)')
+xlabel('Time (sec)')
+title('Body roll')
 
 subplot(2,4,2)
 hold on
 plot(t_vec(:,1),pb_vec(:,1),'b');
 plot(t_vec(:,2),pb_vec(:,2),'c');
 plot(t_vec(:,3),pb_vec(:,3),'r');
-title('body pitch')
+ylabel('Angle (rad)')
+xlabel('Time (sec)')
+title('Body pitch')
 
 subplot(2,4,3)
 hold on
 plot(t_vec(:,1),y_vec(:,1),'b');
 plot(t_vec(:,2),y_vec(:,2),'c');
 plot(t_vec(:,3),y_vec(:,3),'r');
-title('body yaw')
+ylabel('Angle (rad)')
+xlabel('Time (sec)')
+title('Body yaw')
 
 subplot(2,4,4)
 hold on
 plot(t_vec(:,1),rt_vec(:,1),'b');
 plot(t_vec(:,2),rt_vec(:,2),'c');
 plot(t_vec(:,3),rt_vec(:,3),'r');
-title('tail roll')
+ylabel('Angle (rad)')
+xlabel('Time (sec)')
+title('Tail roll')
 
 subplot(2,4,5)
 hold on
 plot(t_vec(:,1),pt_vec(:,1),'b');
 plot(t_vec(:,2),pt_vec(:,2),'c');
 plot(t_vec(:,3),pt_vec(:,3),'r');
-title('tail pitch')
+ylabel('Angle (rad)')
+xlabel('Time (sec)')
+title('Tail pitch')
 
 subplot(2,4,6)
 hold on
 stairs(t_vec(1:end-1,1),u1_vec(:,1),'b','LineWidth',2);
 stairs(t_vec(1:end-1,2),u1_vec(:,2),'c','LineWidth',2);
 stairs(t_vec(1:end-1,3),u1_vec(:,3),'r','LineWidth',2);
-title('input 1')
+ylabel('Torque ($N \cdot m$)')
+xlabel('Time (sec)')
+title('Roll motor input')
 
 subplot(2,4,7)
 hold on
 stairs(t_vec(1:end-1,1),u2_vec(:,1),'b','LineWidth',2);
 stairs(t_vec(1:end-1,2),u2_vec(:,2),'c','LineWidth',2);
 stairs(t_vec(1:end-1,3),u2_vec(:,3),'r','LineWidth',2);
-title('input 2')
+ylabel('Torque ($N \cdot m$)')
+xlabel('Time (sec)')
+title('Pitch motor input')
 
 hL = legend([inert,heavy,light],{'Inertial','Aerodynamic (Heavy)','Aerodynamic (Light)'},'Location','best');
