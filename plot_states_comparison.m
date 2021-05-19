@@ -99,16 +99,16 @@ title('tail pitch')
 
 subplot(2,4,6)
 hold on
-plot(t_vec(1:end-1,1),u1_vec(:,1),'b');
-plot(t_vec(1:end-1,2),u1_vec(:,2),'c');
-plot(t_vec(1:end-1,3),u1_vec(:,3),'r');
+stairs(t_vec(1:end-1,1),u1_vec(:,1),'b','LineWidth',2);
+stairs(t_vec(1:end-1,2),u1_vec(:,2),'c','LineWidth',2);
+stairs(t_vec(1:end-1,3),u1_vec(:,3),'r','LineWidth',2);
 title('input 1')
 
 subplot(2,4,7)
 hold on
-plot(t_vec(1:end-1,1),u2_vec(:,1),'b');
-plot(t_vec(1:end-1,2),u2_vec(:,2),'c');
-plot(t_vec(1:end-1,3),u2_vec(:,3),'r');
+stairs(t_vec(1:end-1,1),u2_vec(:,1),'b','LineWidth',2);
+stairs(t_vec(1:end-1,2),u2_vec(:,2),'c','LineWidth',2);
+stairs(t_vec(1:end-1,3),u2_vec(:,3),'r','LineWidth',2);
 title('input 2')
 
 hL = legend([inert,heavy,light],{'Inertial','Aerodynamic (Heavy)','Aerodynamic (Light)'},'Location','best');
